@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "imu_data.h"
+#include "imu_com_filter.h"
 
 void app_main(void)
 {
@@ -10,6 +11,8 @@ void app_main(void)
     float roll, pitch;
 
     imu_init();
+    filter_init();
+    imu_calibrate_gyro();
 
     while (1)
     {
@@ -17,9 +20,9 @@ void app_main(void)
 
         filter_update(ax, ay, az, gx, gy, gz, &roll, &pitch);
 
-        printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
-               ax, ay, az, gx, gy, gz);
+        // printf("%.2f,%.2f\n", roll, pitch);
+        printf("%.2f,%.2f,%.2f\n", gx, gy, gz);
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
