@@ -7,11 +7,15 @@
 #define GYRO_DEADBAND 0.15f
 #define ALPHA         0.95f
 
-static float    roll_gyro  = 0.0f;
+
+static float roll_acc = 0.0f;
+static float pitch_acc = 0.0f;
+static float roll_gyro  = 0.0f;
 static float pitch_gyro = 0.0f;
 static float roll_comp  = 0.0f;
 static float pitch_comp = 0.0f;
 static uint32_t last_time = 0;
+
 
 void filter_init(void)
 {
@@ -42,8 +46,8 @@ void filter_update(float ax, float ay, float az,
     if (fabsf(gy) < GYRO_DEADBAND) gy = 0.0f;
 
     // ---------------- ACCEL ANGLES IN RADIANS ----------------
-    float roll_acc  = atan2f(ay, az);
-    float pitch_acc = atan2f(-ax, sqrtf(ay * ay + az * az));
+    roll_acc  = atan2f(ay, az);
+    pitch_acc = atan2f(-ax, sqrtf(ay * ay + az * az));
 
     // Convert to Degrees
     roll_acc  = roll_acc  * (180.0f / M_PI);

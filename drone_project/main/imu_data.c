@@ -114,6 +114,9 @@ void imu_read(float *ax, float *ay, float *az, float *gx, float *gy, float *gz)
     float gy_f = gy_raw / GYRO_SENS;
     float gz_f = gz_raw / GYRO_SENS;
 
+    // Optional: apply scaling factor to Z accel to better match 1g at rest
+    float az_scale = 0.91f;
+
     // APPLY BIAS CORRECTION (HERE)
     gx_f -= gx_bias;
     gy_f -= gy_bias;
@@ -122,6 +125,9 @@ void imu_read(float *ax, float *ay, float *az, float *gx, float *gy, float *gz)
     ax_f -= ax_bias;
     ay_f -= ay_bias;
     az_f -= az_bias;
+
+    // Apply scaling factor to Z accel
+    az_f *= az_scale;
 
     if (fabsf(gx_f) < GYRO_DEADBAND) gx_f = 0.0f;
     if (fabsf(gy_f) < GYRO_DEADBAND) gy_f = 0.0f;
