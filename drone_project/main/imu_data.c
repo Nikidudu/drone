@@ -18,16 +18,19 @@
 // Registers
 #define PWR_MGMT_1     0x6B
 #define ACCEL_XOUT_H   0x3B
+#define GYRO_CONFIG   0x1B
+#define ACCEL_CONFIG  0x1C
 
 // settings
 #define ACCEL_SENS 16384.0   // ±2g
 #define GYRO_SENS 131.0      // ±250 deg/s
 
-#define GYRO_DEADBAND 0.15f
+#define GYRO_DEADBAND 0.5f
 
 static float gx_bias = 0.0f;
 static float gy_bias = 0.0f;
 static float gz_bias = 0.0f;
+static float ax_bias = 0, ay_bias = 0, az_bias = 0;
 
 // ---------------- I2C INIT ----------------
 static void i2c_master_init()
@@ -78,6 +81,8 @@ void imu_init()
     // Wake up device (clear sleep bit)
     mpu6500_write(PWR_MGMT_1, 0x00);
     vTaskDelay(pdMS_TO_TICKS(100));
+    mpu6500_write(GYRO_CONFIG,  0x00);     // ±250°/s
+    mpu6500_write(ACCEL_CONFIG, 0x00);     // ±2g
 }
 
 // ---------------- READ DATA ----------------
@@ -96,6 +101,8 @@ void imu_read(float *ax, float *ay, float *az, float *gx, float *gy, float *gz)
     int16_t gy_raw = (raw_data[10] << 8) | raw_data[11];
     int16_t gz_raw = (raw_data[12] << 8) | raw_data[13];
 
+    // printf("RAW AX: %d AY: %d AZ: %d\n", ax_raw, ay_raw, az_raw);
+    
 
     // convert accel
     float ax_f = ax_raw / ACCEL_SENS;
@@ -111,6 +118,10 @@ void imu_read(float *ax, float *ay, float *az, float *gx, float *gy, float *gz)
     gx_f -= gx_bias;
     gy_f -= gy_bias;
     gz_f -= gz_bias;
+
+    ax_f -= ax_bias;
+    ay_f -= ay_bias;
+    az_f -= az_bias;
 
     if (fabsf(gx_f) < GYRO_DEADBAND) gx_f = 0.0f;
     if (fabsf(gy_f) < GYRO_DEADBAND) gy_f = 0.0f;
@@ -157,3 +168,22 @@ void imu_calibrate_gyro(void)
     gz_bias = gz_sum / 500.0f;
 }
 
+void imu_calibrate_accel(void)
+{
+    float ax_sum = 0, ay_sum = 0, az_sum = 0;
+
+    for (int i = 0; i < 500; i++) {
+        float ax, ay, az, gx, gy, gz;
+        imu_read(&ax, &ay, &az, &gx, &gy, &gz);
+
+        ax_sum += ax;
+        ay_sum += ay;
+        az_sum += az;
+
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+
+    ax_bias = ax_sum / 500.0f;
+    ay_bias = ay_sum / 500.0f;
+    az_bias = (az_sum / 500.0f) - 1.0f;
+}

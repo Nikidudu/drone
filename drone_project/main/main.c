@@ -8,21 +8,29 @@ void app_main(void)
 {
     float ax, ay, az;
     float gx, gy, gz;
-    float roll, pitch;
+    
+    float roll_gyro,  pitch_gyro;
+    float roll_accel, pitch_accel;
+    float roll_comp,  pitch_comp;
 
     imu_init();
-    filter_init();
     imu_calibrate_gyro();
+    filter_init();
+    
 
     while (1)
     {
         imu_read(&ax, &ay, &az, &gx, &gy, &gz);
 
-        filter_update(ax, ay, az, gx, gy, gz, &roll, &pitch);
+        filter_update(ax, ay, az, gx, gy, gz,
+                      &roll_gyro,  &roll_accel,  &roll_comp,
+                      &pitch_gyro, &pitch_accel, &pitch_comp);
+        printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", roll_gyro, pitch_gyro, roll_accel, pitch_accel, roll_comp, pitch_comp);
+        // printf("%.2f,%.2f,%.2f\n", gx, gy, gz);
 
-        // printf("%.2f,%.2f\n", roll, pitch);
-        printf("%.2f,%.2f,%.2f\n", gx, gy, gz);
+       
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
+
