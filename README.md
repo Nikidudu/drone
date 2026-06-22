@@ -1,3 +1,3 @@
 # Work in progress
 
-100% vibecode
+Implemented a complementary and madgwick IMU filter
